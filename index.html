@@ -1,14 +1,179 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아이디어 보드</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <style>
+        .idea-card {
+            transition: all 0.3s ease;
+        }
+        .idea-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            transition: all 0.1s ease;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+    </style>
 </head>
-<body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600">아이디어 보드</h1>
+
+        <div class="mb-8">
+            <input v-model="newIdea.title" class="w-full p-2 mb-2 border rounded" placeholder="제목">
+            <textarea v-model="newIdea.content" class="w-full p-2 mb-2 border rounded" placeholder="아이디어"></textarea>
+            <button @click="addIdea" class="btn w-full bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600">추가</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="idea in ideas" :key="idea.id" @click="openPopup(idea)" class="idea-card bg-white p-4 rounded-lg shadow cursor-pointer">
+                <h2 class="text-xl font-semibold mb-2">{{ idea.title }}</h2>
+                <div class="flex justify-between items-center text-sm text-gray-500">
+                    <span>{{ formatDate(idea.createdAt) }}</span>
+                    <span><i class="fas fa-thumbs-up"></i> {{ idea.likes }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="selectedIdea" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg p-6 max-w-lg w-full">
+                <h2 class="text-2xl font-bold mb-4">{{ selectedIdea.title }}</h2>
+                <p class="mb-4">{{ selectedIdea.content }}</p>
+                <div class="flex justify-between items-center">
+                    <button @click="likeIdea" :disabled="selectedIdea.liked" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400">
+                        <i class="fas fa-thumbs-up mr-2"></i>좋아요 ({{ selectedIdea.likes }})
+                    </button>
+                    <button v-if="selectedIdea.userId === getUserId()" @click="deleteIdea" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        삭제
+                    </button>
+                    <button @click="closePopup" class="btn bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDT4PrvgJaSa2NzcasUhnQ8gr6DlpO560g",
+            authDomain: "diary-d364c.firebaseapp.com",
+            projectId: "diary-d364c",
+            storageBucket: "diary-d364c.appspot.com",
+            messagingSenderId: "892089364925",
+            appId: "1:892089364925:web:c0b1e87a6716654456a2d4",
+            measurementId: "G-L84LZP8C0J"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const { createApp, ref, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const ideas = ref([]);
+                const newIdea = ref({ title: '', content: '' });
+                const selectedIdea = ref(null);
+
+                const getUserId = () => {
+                    let userId = localStorage.getItem('userId');
+                    if (!userId) {
+                        userId = Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('userId', userId);
+                    }
+                    return userId;
+                };
+
+                const addIdea = async () => {
+                    if (newIdea.value.title && newIdea.value.content) {
+                        const ideaData = {
+                            title: newIdea.value.title,
+                            content: newIdea.value.content,
+                            createdAt: new Date(),
+                            likes: 0,
+                            userId: getUserId()
+                        };
+                        await addDoc(collection(db, "ideas"), ideaData);
+                        newIdea.value = { title: '', content: '' };
+                    }
+                };
+
+                const openPopup = (idea) => {
+                    selectedIdea.value = { ...idea, liked: false };
+                    checkIfLiked(idea.id);
+                };
+
+                const closePopup = () => {
+                    selectedIdea.value = null;
+                };
+
+                const likeIdea = async () => {
+                    if (!selectedIdea.value.liked) {
+                        const ideaRef = doc(db, "ideas", selectedIdea.value.id);
+                        await updateDoc(ideaRef, {
+                            likes: selectedIdea.value.likes + 1
+                        });
+                        await setDoc(doc(db, "likes", `${selectedIdea.value.id}_${getUserId()}`), {
+                            userId: getUserId(),
+                            ideaId: selectedIdea.value.id
+                        });
+                        selectedIdea.value.liked = true;
+                        closePopup();
+                    }
+                };
+
+                const deleteIdea = async () => {
+                    if (selectedIdea.value.userId === getUserId()) {
+                        await deleteDoc(doc(db, "ideas", selectedIdea.value.id));
+                        closePopup();
+                    }
+                };
+
+                const formatDate = (date) => {
+                    return new Date(date.seconds * 1000).toLocaleDateString();
+                };
+
+                const checkIfLiked = async (ideaId) => {
+                    const likeRef = doc(db, "likes", `${ideaId}_${getUserId()}`);
+                    const likeDoc = await getDoc(likeRef);
+                    selectedIdea.value.liked = likeDoc.exists();
+                };
+
+                onMounted(() => {
+                    onSnapshot(collection(db, "ideas"), (snapshot) => {
+                        ideas.value = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                    });
+                });
+
+                return {
+                    ideas,
+                    newIdea,
+                    selectedIdea,
+                    addIdea,
+                    openPopup,
+                    closePopup,
+                    likeIdea,
+                    deleteIdea,
+                    formatDate,
+                    getUserId
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
