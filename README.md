@@ -36,5 +36,5 @@
 
 ### Link
 - **General link**: [🚗 Visit 아이디어 보드의 Repo]([https://github.com/your-repo-link](https://github.com/jamessung644/Ideanote?tab=readme-ov-file#header))
-- **Website**: ![웹사이트](https://jamessung644.github.io/Ideanote/)
+- **Website**: ![🌐 웹사이트][(https://jamessung644.github.io/Ideanote/]
 
