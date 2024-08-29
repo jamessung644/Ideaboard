@@ -15,8 +15,6 @@
 3. [Text Stlye2](#text-style2)
 4. [List](#list)
 5. [Link](#link)
-6. [Code Block](#code-block)
-7. [Table](#table)
 
 ### Header
 - **아이디어 보드**의 제목은 H1으로 설정되었습니다.
@@ -37,12 +35,6 @@
 - **Ordered list**: 단계적인 절차 설명에 사용될 수 있습니다.
 
 ### Link
-- **General link**: [🚗 Visit 아이디어 보드의 Repo](https://github.com/your-repo-link)
-- **Image link**: ![아이디어 보드](./path/to/your/image.png)
+- **General link**: [🚗 Visit 아이디어 보드의 Repo]([https://github.com/your-repo-link](https://github.com/jamessung644/Ideanote?tab=readme-ov-file#header))
+- **Website**: ![웹사이트](https://jamessung644.github.io/Ideanote/)
 
-### Code Block
-- **Code inline**: `console.log('Hello 아이디어 보드!');`
-- **Code block**:
-```js
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
