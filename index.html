@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
     <style>
         .idea-card {
             transition: all 0.3s ease;
@@ -53,7 +54,7 @@
                     <button @click="likeIdea" :disabled="selectedIdea.liked" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400">
                         <i class="fas fa-thumbs-up mr-2"></i>좋아요 ({{ selectedIdea.likes }})
                     </button>
-                    <button v-if="selectedIdea.userId === getUserId()" @click="deleteIdea" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    <button v-if="selectedIdea.authorId === getUserId()" @click="deleteIdea" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                         삭제
                     </button>
                     <button @click="closePopup" class="btn bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">닫기</button>
@@ -87,15 +88,6 @@
                 const newIdea = ref({ title: '', content: '' });
                 const selectedIdea = ref(null);
 
-                const getUserId = () => {
-                    let userId = localStorage.getItem('userId');
-                    if (!userId) {
-                        userId = Math.random().toString(36).substr(2, 9);
-                        localStorage.setItem('userId', userId);
-                    }
-                    return userId;
-                };
-
                 const addIdea = async () => {
                     if (newIdea.value.title && newIdea.value.content) {
                         const ideaData = {
@@ -103,7 +95,7 @@
                             content: newIdea.value.content,
                             createdAt: new Date(),
                             likes: 0,
-                            userId: getUserId()
+                            authorId: getUserId()
                         };
                         await addDoc(collection(db, "ideas"), ideaData);
                         newIdea.value = { title: '', content: '' };
@@ -135,7 +127,7 @@
                 };
 
                 const deleteIdea = async () => {
-                    if (selectedIdea.value.userId === getUserId()) {
+                    if (selectedIdea.value.authorId === getUserId()) {
                         await deleteDoc(doc(db, "ideas", selectedIdea.value.id));
                         closePopup();
                     }
@@ -143,6 +135,15 @@
 
                 const formatDate = (date) => {
                     return new Date(date.seconds * 1000).toLocaleDateString();
+                };
+
+                const getUserId = () => {
+                    let userId = localStorage.getItem('userId');
+                    if (!userId) {
+                        userId = Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('userId', userId);
+                    }
+                    return userId;
                 };
 
                 const checkIfLiked = async (ideaId) => {
