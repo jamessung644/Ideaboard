@@ -35,6 +35,6 @@
 - **Ordered list**: 단계적인 절차 설명에 사용될 수 있습니다.
 
 ### Link
-- **General link**: [🚗 Visit 아이디어 보드의 Repo]([https://github.com/jamessung644/Ideanote?tab=readme-ov-file#header])
-- **Website**: [🌐 웹사이트]([https://jamessung644.github.io/Ideanote/])
+- **General link**: [🚗 Visit 아이디어 보드의 Repo](https://github.com/jamessung644/Ideanote?tab=readme-ov-file#header)
+- **Website**: [🌐 웹사이트](https://jamessung644.github.io/Ideanote/)
 
