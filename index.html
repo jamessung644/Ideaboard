@@ -13,13 +13,13 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
     <style>
         @font-face {
-            font-family: 'Author-Variable';
-            src: url('../fonts/Author-Variable.woff2') format('woff2'),
-                 url('../fonts/Author-Variable.woff') format('woff'),
-                 url('../fonts/Author-Variable.ttf') format('truetype');
-            font-weight: 200 700;
+            font-family: 'Satoshi-BlackItalic';
+            src: url('fonts/Satoshi-BlackItalic.woff2') format('woff2'),
+                 url('fonts/Satoshi-BlackItalic.woff') format('woff'),
+                 url('fonts/Satoshi-BlackItalic.ttf') format('truetype');
+            font-weight: 900;
+            font-style: italic;
             font-display: swap;
-            font-style: normal;
         }
 
         :root {
@@ -91,11 +91,10 @@
             margin-top: 10px;
         }
         h1 {
-        font-family: 'Author-Variable', sans-serif;
-        font-variation-settings: 'wght' 700;
-        font-size: 3.5rem; /* 더 큰 폰트 크기 */
-        line-height: 1.2; /* 줄 간격 조정 */
-        margin-bottom: 1.5rem; /* 하단 여백 증가 */
+            font-family: 'Satoshi-BlackItalic', sans-serif;
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
         }
     </style>
 </head>
@@ -140,14 +139,14 @@
             <div class="modal-content rounded-lg p-6 max-w-lg w-full">
                 <h2 v-if="!isEditing" class="text-2xl font-bold mb-4">{{ selectedIdea.title }}</h2>
                 <input v-else v-model="editingIdea.title" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="제목">
-                
+
                 <p v-if="!isEditing" class="mb-4 text-base leading-relaxed">{{ selectedIdea.content }}</p>
                 <textarea v-else v-model="editingIdea.content" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="아이디어"></textarea>
-                
+
                 <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
                     작성자: {{ selectedIdea.authorName || '알 수 없음' }}
                 </div>
-                
+
                 <div v-if="!isEditing" class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-2">
                     <button @click="likeIdea" :disabled="selectedIdea.liked || !user" class="btn w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 dark:bg-blue-600 dark:hover:bg-blue-700">
                         <i class="fas fa-thumbs-up mr-2"></i>좋아요 ({{ selectedIdea.likes }})
