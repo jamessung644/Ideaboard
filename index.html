@@ -91,8 +91,11 @@
             margin-top: 10px;
         }
         h1 {
-            font-family: 'Author-Variable', sans-serif;
-            font-variation-settings: 'wght' 700;
+        font-family: 'Author-Variable', sans-serif;
+        font-variation-settings: 'wght' 700;
+        font-size: 3.5rem; /* 더 큰 폰트 크기 */
+        line-height: 1.2; /* 줄 간격 조정 */
+        margin-bottom: 1.5rem; /* 하단 여백 증가 */
         }
     </style>
 </head>
@@ -109,7 +112,9 @@
             로그아웃
         </button>
 
-        <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400">Idea Board</h1>
+        <h1 class="text-5xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+            Idea Board
+        </h1>
 
         <div class="mb-8" v-if="user">
             <input v-model="newIdea.title" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="제목">
