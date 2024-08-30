@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
+    <style>
+        @font-face {
+            font-family: 'Satoshi-BlackItalic';
+            src: url('fonts/Satoshi-BlackItalic.woff2') format('woff2'),
+                 url('fonts/Satoshi-BlackItalic.woff') format('woff'),
+                 url('fonts/Satoshi-BlackItalic.ttf') format('truetype');
+            font-weight: 900;
+            font-style: italic;
+            font-display: swap;
+        }
+
+        :root {
+            --bg-color: #f0f4f8;
+            --text-color: #2d3748;
+            --card-bg-color: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --primary-color: #4a5568;
+            --primary-hover-color: #2d3748;
+            --accent-color: #ed8936;
+            --modal-bg-color: #ffffff;
+            --modal-text-color: #2d3748;
+        }
+        .dark {
+            --bg-color: #1a202c;
+            --text-color: #e2e8f0;
+            --card-bg-color: #2d3748;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --primary-color: #a0aec0;
+            --primary-hover-color: #cbd5e0;
+            --accent-color: #ed8936;
+            --modal-bg-color: #2d3748;
+            --modal-text-color: #e2e8f0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Arial', sans-serif;
+        }
+        .idea-card {
+            background-color: var(--card-bg-color);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .idea-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn {
+            transition: all 0.2s ease;
+            border-radius: 20px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .login-btn {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: var(--modal-bg-color);
+            color: var(--modal-text-color);
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 15px;
+        }
+        .modal-content p {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .edit-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        h1 {
+            font-family: 'Satoshi-BlackItalic', sans-serif;
+            font-size: 4rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .idea-input {
+            background-color: var(--card-bg-color);
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .idea-input:focus {
+            outline: none;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(237, 137, 54, 0.5);
+        }
+        .idea-preview {
+            position: relative;
+            height: 100px;
+            overflow: hidden;
+        }
+        .idea-preview::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(transparent, var(--card-bg-color));
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container mx-auto p-4">
+        <button @click="toggleTheme" class="theme-toggle btn bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-full">
+            <i :class="isDarkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
+        </button>
+
+        <button @click="logout" class="login-btn btn bg-red-500 text-white px-4 py-2 rounded-full">
+            로그아웃
+        </button>
+
+        <h1 class="text-center mb-12">
+            Idea Board
+        </h1>
+
+        <div class="mb-12" v-if="user">
+            <input v-model="newIdea.title" class="idea-input w-full text-lg font-semibold mb-4" placeholder="아이디어 제목">
+            <textarea v-model="newIdea.content" class="idea-input w-full h-32 resize-none" placeholder="아이디어 내용을 자세히 적어주세요..."></textarea>
+            <button @click="addIdea" class="btn w-full bg-accent-color text-white p-3 rounded-lg hover:bg-accent-color-dark text-lg font-semibold mt-4">새로운 아이디어 추가</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="idea in ideas" :key="idea.id" @click="openPopup(idea)" class="idea-card p-6 cursor-pointer">
+                <h2 class="text-xl font-bold mb-3">{{ idea.title }}</h2>
+                <div class="idea-preview text-gray-600 dark:text-gray-300">
+                    {{ idea.content }}
+                </div>
+                <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    <span>{{ formatDate(idea.createdAt) }}</span>
+                    <span><i class="fas fa-thumbs-up"></i> {{ idea.likes }}</span>
+                </div>
+                <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    작성자: {{ idea.authorName || '알 수 없음' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 아이디어 상세 모달 -->
+        <div v-if="selectedIdea" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="modal-content rounded-lg p-8 max-w-lg w-full">
+                <h2 v-if="!isEditing" class="text-3xl font-bold mb-4">{{ selectedIdea.title }}</h2>
+                <input v-else v-model="editingIdea.title" class="idea-input w-full text-xl font-semibold mb-4" placeholder="제목">
+
+                <p v-if="!isEditing" class="mb-6 text-lg leading-relaxed">{{ selectedIdea.content }}</p>
+                <textarea v-else v-model="editingIdea.content" class="idea-input w-full h-40 resize-none text-lg" placeholder="아이디어"></textarea>
+
+                <div class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+                    작성자: {{ selectedIdea.authorName || '알 수 없음' }}
+                </div>
+
+                <div v-if="!isEditing" class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button @click="likeIdea" :disabled="selectedIdea.liked || !user" class="btn w-full sm:w-auto bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 text-lg font-semibold">
+                        <i class="fas fa-thumbs-up mr-2"></i>좋아요 ({{ selectedIdea.likes }})
+                    </button>
+                    <div v-if="selectedIdea.authorId === user?.uid" class="edit-buttons w-full sm:w-auto flex space-x-4">
+                        <button @click="startEditing" class="btn flex-1 bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 text-lg font-semibold">
+                            수정
+                        </button>
+                        <button @click="deleteIdea" class="btn flex-1 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 text-lg font-semibold">
+                            삭제
+                        </button>
+                    </div>
+                    <button @click="closePopup" class="btn w-full sm:w-auto bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 text-lg font-semibold">
+                        닫기
+                    </button>
+                </div>
+                <div v-else class="flex justify-end space-x-4 mt-6">
+                    <button @click="saveEdit" class="btn bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 text-lg font-semibold">
+                        저장
+                    </button>
+                    <button @click="cancelEdit" class="btn bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 text-lg font-semibold">
+                        취소
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDT4PrvgJaSa2NzcasUhnQ8gr6DlpO560g",
+            authDomain: "diary-d364c.firebaseapp.com",
+            projectId: "diary-d364c",
+            storageBucket: "diary-d364c.appspot.com",
+            messagingSenderId: "892089364925",
+            appId: "1:892089364925:web:c0b1e87a6716654456a2d4",
+            measurementId: "G-L84LZP8C0J"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const { createApp, ref, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                const ideas = ref([]);
+                const newIdea = ref({ title: '', content: '' });
+                const selectedIdea = ref(null);
+                const isDarkMode = ref(window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const user = ref(null);
+                const isEditing = ref(false);
+                const editingIdea = ref({ title: '', content: '' });
+
+                const addIdea = async () => {
+                    if (newIdea.value.title && newIdea.value.content && user.value) {
+                        const ideaData = {
+                            title: newIdea.value.title,
+                            content: newIdea.value.content,
+                            createdAt: new Date(),
+                            likes: 0,
+                            authorId: user.value.uid,
+                            authorName: user.value.displayName || user.value.email
+                        };
+                        await addDoc(collection(db, "ideas"), ideaData);
+                        newIdea.value = { title: '', content: '' };
+                    }
+                };
+
+                    const openPopup = (idea) => {
+                                        selectedIdea.value = { ...idea, liked: false };
+                                        checkIfLiked(idea.id);
+                                    };
+
+                                    const closePopup = () => {
+                                        selectedIdea.value = null;
+                                        isEditing.value = false;
+                                    };
+
+                                    const likeIdea = async () => {
+                                        if (!selectedIdea.value.liked && user.value) {
+                                            const ideaRef = doc(db, "ideas", selectedIdea.value.id);
+                                            await updateDoc(ideaRef, {
+                                                likes: selectedIdea.value.likes + 1
+                                            });
+                                            await setDoc(doc(db, "likes", `${selectedIdea.value.id}_${user.value.uid}`), {
+                                                userId: user.value.uid,
+                                                ideaId: selectedIdea.value.id
+                                            });
+                                            selectedIdea.value.liked = true;
+                                            selectedIdea.value.likes += 1;
+                                        }
+                                    };
+
+                                    const deleteIdea = async () => {
+                                        if (selectedIdea.value.authorId === user.value.uid) {
+                                            await deleteDoc(doc(db, "ideas", selectedIdea.value.id));
+                                            closePopup();
+                                        }
+                                    };
+
+                                    const startEditing = () => {
+                                        editingIdea.value = { ...selectedIdea.value };
+                                        isEditing.value = true;
+                                    };
+
+                                    const saveEdit = async () => {
+                                        if (editingIdea.value.title && editingIdea.value.content) {
+                                            const ideaRef = doc(db, "ideas", selectedIdea.value.id);
+                                            await updateDoc(ideaRef, {
+                                                title: editingIdea.value.title,
+                                                content: editingIdea.value.content
+                                            });
+                                            Object.assign(selectedIdea.value, editingIdea.value);
+                                            isEditing.value = false;
+                                        }
+                                    };
+
+                                    const cancelEdit = () => {
+                                        isEditing.value = false;
+                                    };
+
+                                    const formatDate = (date) => {
+                                        return new Date(date.seconds * 1000).toLocaleDateString();
+                                    };
+
+                                    const checkIfLiked = async (ideaId) => {
+                                        if (user.value) {
+                                            const likeRef = doc(db, "likes", `${ideaId}_${user.value.uid}`);
+                                            const likeDoc = await getDoc(likeRef);
+                                            selectedIdea.value.liked = likeDoc.exists();
+                                        }
+                                    };
+
+                                    const toggleTheme = () => {
+                                        isDarkMode.value = !isDarkMode.value;
+                                        updateTheme();
+                                    };
+
+                                    const updateTheme = () => {
+                                        if (isDarkMode.value) {
+                                            document.documentElement.classList.add('dark');
+                                        } else {
+                                            document.documentElement.classList.remove('dark');
+                                        }
+                                    };
+
+                                    const logout = async () => {
+                                        try {
+                                            await signOut(auth);
+                                            window.location.href = 'index.html'; // 로그아웃 후 index.html로 리다이렉트
+                                        } catch (error) {
+                                            console.error("로그아웃 실패:", error);
+                                        }
+                                    };
+
+                                    watch(isDarkMode, updateTheme);
+
+                                    onMounted(() => {
+                                        onSnapshot(collection(db, "ideas"), (snapshot) => {
+                                            ideas.value = snapshot.docs.map(doc => ({
+                                                id: doc.id,
+                                                ...doc.data()
+                                            }));
+                                        });
+                                        updateTheme();
+
+                                        // 시스템 다크 모드 변경 감지
+                                        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                                            isDarkMode.value = e.matches;
+                                        });
+
+                                        onAuthStateChanged(auth, (currentUser) => {
+                                            if (currentUser) {
+                                                user.value = currentUser;
+                                            } else {
+                                                // 사용자가 로그인하지 않은 경우 index.html로 리다이렉트
+                                                window.location.href = 'index.html';
+                                            }
+                                        });
+                                    });
+
+                                    return {
+                                        ideas,
+                                        newIdea,
+                                        selectedIdea,
+                                        isDarkMode,
+                                        user,
+                                        isEditing,
+                                        editingIdea,
+                                        addIdea,
+                                        openPopup,
+                                        closePopup,
+                                        likeIdea,
+                                        deleteIdea,
+                                        startEditing,
+                                        saveEdit,
+                                        cancelEdit,
+                                        formatDate,
+                                        toggleTheme,
+                                        logout
+                                    };
+                                }
+                            }).mount('#app');
+                        </script>
+                    </body>
+                    </html>

@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idea Board</title>
+    <title>Welcome to Idea Board</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
     <style>
         @font-face {
             font-family: 'Satoshi-BlackItalic';
@@ -21,181 +18,59 @@
             font-style: italic;
             font-display: swap;
         }
-
-        :root {
-            --bg-color: #f3f4f6;
-            --text-color: #1f2937;
-            --card-bg-color: #ffffff;
-            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --primary-color: #4f46e5;
-            --primary-hover-color: #4338ca;
-            --modal-bg-color: #ffffff;
-            --modal-text-color: #1f2937;
-        }
-        .dark {
-            --bg-color: #1f2937;
-            --text-color: #f3f4f6;
-            --card-bg-color: #374151;
-            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-            --primary-color: #818cf8;
-            --primary-hover-color: #6366f1;
-            --modal-bg-color: #2d3748;
-            --modal-text-color: #e2e8f0;
-        }
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .idea-card {
-            background-color: var(--card-bg-color);
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-        }
-        .idea-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .btn {
-            transition: all 0.1s ease;
-        }
-        .btn:active {
-            transform: scale(0.95);
-        }
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        .login-btn {
-            position: fixed;
-            top: 20px;
-            right: 80px;
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: var(--modal-bg-color);
-            color: var(--modal-text-color);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-content p {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .edit-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 10px;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
         }
         h1 {
             font-family: 'Satoshi-BlackItalic', sans-serif;
-            font-size: 3.5rem;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
+            color: #ed8936;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
-<body>
-    <div id="app" class="container mx-auto p-4">
-        <button @click="toggleTheme" class="theme-toggle btn bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-full">
-            <i :class="isDarkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
+<body class="flex flex-col min-h-screen">
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-6 py-3">
+            <h1 class="text-3xl font-bold">Idea Board</h1>
+        </nav>
+    </header>
+
+    <main class="flex-grow container mx-auto px-6 py-12 flex flex-col items-center justify-center">
+        <h2 class="text-4xl md:text-5xl font-bold mb-8 text-center">Capture and Organize Your Ideas</h2>
+        <p class="text-xl mb-12 text-center max-w-2xl">
+            Idea Board is the perfect place to jot down, organize, and collaborate on your ideas. 
+            From quick thoughts to detailed projects, we've got you covered.
+        </p>
+        <button id="startNowBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition duration-300 ease-in-out transform hover:-translate-y-1">
+            Start Now
         </button>
+    </main>
 
-        <button v-if="!user" @click="showLoginModal = true" class="login-btn btn bg-blue-500 text-white px-4 py-2 rounded-full">
-            로그인
-        </button>
-        <button v-else @click="logout" class="login-btn btn bg-red-500 text-white px-4 py-2 rounded-full">
-            로그아웃
-        </button>
-
-        <h1 class="text-5xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
-            Idea Board
-        </h1>
-
-        <div class="mb-8" v-if="user">
-            <input v-model="newIdea.title" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="제목">
-            <textarea v-model="newIdea.content" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="아이디어"></textarea>
-            <button @click="addIdea" class="btn w-full bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700">추가</button>
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2024 Idea Board. All rights reserved.</p>
         </div>
+    </footer>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="idea in ideas" :key="idea.id" @click="openPopup(idea)" class="idea-card p-4 rounded-lg shadow cursor-pointer">
-                <h2 class="text-xl font-semibold mb-2">{{ idea.title }}</h2>
-                <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                    <span>{{ formatDate(idea.createdAt) }}</span>
-                    <span><i class="fas fa-thumbs-up"></i> {{ idea.likes }}</span>
-                </div>
-                <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    작성자: {{ idea.authorName || '알 수 없음' }}
-                </div>
-            </div>
-        </div>
-
-        <!-- 아이디어 상세 모달 -->
-        <div v-if="selectedIdea" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="modal-content rounded-lg p-6 max-w-lg w-full">
-                <h2 v-if="!isEditing" class="text-2xl font-bold mb-4">{{ selectedIdea.title }}</h2>
-                <input v-else v-model="editingIdea.title" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="제목">
-
-                <p v-if="!isEditing" class="mb-4 text-base leading-relaxed">{{ selectedIdea.content }}</p>
-                <textarea v-else v-model="editingIdea.content" class="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="아이디어"></textarea>
-
-                <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                    작성자: {{ selectedIdea.authorName || '알 수 없음' }}
-                </div>
-
-                <div v-if="!isEditing" class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                    <button @click="likeIdea" :disabled="selectedIdea.liked || !user" class="btn w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 dark:bg-blue-600 dark:hover:bg-blue-700">
-                        <i class="fas fa-thumbs-up mr-2"></i>좋아요 ({{ selectedIdea.likes }})
-                    </button>
-                    <div v-if="selectedIdea.authorId === user?.uid" class="edit-buttons">
-                        <button @click="startEditing" class="btn bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-                            수정
-                        </button>
-                        <button @click="deleteIdea" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                            삭제
-                        </button>
-                    </div>
-                    <button @click="closePopup" class="btn w-full sm:w-auto bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
-                        닫기
-                    </button>
-                </div>
-                <div v-else class="flex justify-end space-x-2">
-                    <button @click="saveEdit" class="btn bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                        저장
-                    </button>
-                    <button @click="cancelEdit" class="btn bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
-                        취소
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 로그인 모달 -->
-        <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
-            <div class="modal-content rounded-lg p-6 max-w-md w-full">
-                <h2 class="text-2xl font-bold mb-4">로그인</h2>
-                <button @click="loginWithGoogle" class="btn w-full bg-red-500 text-white px-4 py-2 rounded-full mb-2">
-                    <i class="fab fa-google mr-2"></i>Google로 로그인
-                </button>
-                <button @click="loginWithGithub" class="btn w-full bg-gray-800 text-white px-4 py-2 rounded-full mb-4">
-                    <i class="fab fa-github mr-2"></i>GitHub로 로그인
-                </button>
-                <button @click="showLoginModal = false" class="btn w-full bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
-                    닫기
-                </button>
-            </div>
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 class="text-3xl font-bold mb-6">Login</h2>
+            <button id="googleLoginBtn" class="w-full bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 mb-4 text-lg font-semibold">
+                <i class="fab fa-google mr-2"></i>Login with Google
+            </button>
+            <button id="githubLoginBtn" class="w-full bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900 mb-6 text-lg font-semibold">
+                <i class="fab fa-github mr-2"></i>Login with GitHub
+            </button>
+            <button id="closeModalBtn" class="w-full bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 text-lg font-semibold">
+                Close
+            </button>
         </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDT4PrvgJaSa2NzcasUhnQ8gr6DlpO560g",
             authDomain: "diary-d364c.firebaseapp.com",
@@ -206,191 +81,44 @@
             measurementId: "G-L84LZP8C0J"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const googleProvider = new GoogleAuthProvider();
-        const githubProvider = new GithubAuthProvider();
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
 
-        const { createApp, ref, onMounted, watch } = Vue;
+        const startNowBtn = document.getElementById('startNowBtn');
+        const loginModal = document.getElementById('loginModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const githubLoginBtn = document.getElementById('githubLoginBtn');
 
-        createApp({
-            setup() {
-                const ideas = ref([]);
-                const newIdea = ref({ title: '', content: '' });
-                const selectedIdea = ref(null);
-                const isDarkMode = ref(window.matchMedia('(prefers-color-scheme: dark)').matches);
-                const user = ref(null);
-                const showLoginModal = ref(false);
-                const isEditing = ref(false);
-                const editingIdea = ref({ title: '', content: '' });
-                const addIdea = async () => {
-                                    if (newIdea.value.title && newIdea.value.content && user.value) {
-                                        const ideaData = {
-                                            title: newIdea.value.title,
-                                            content: newIdea.value.content,
-                                            createdAt: new Date(),
-                                            likes: 0,
-                                            authorId: user.value.uid,
-                                            authorName: user.value.displayName || user.value.email
-                                        };
-                                        await addDoc(collection(db, "ideas"), ideaData);
-                                        newIdea.value = { title: '', content: '' };
-                                    }
-                                };
+        startNowBtn.addEventListener('click', () => {
+            loginModal.classList.remove('hidden');
+        });
 
-                                const openPopup = (idea) => {
-                                    selectedIdea.value = { ...idea, liked: false };
-                                    checkIfLiked(idea.id);
-                                };
+        closeModalBtn.addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+        });
 
-                                const closePopup = () => {
-                                    selectedIdea.value = null;
-                                    isEditing.value = false;
-                                };
+        googleLoginBtn.addEventListener('click', () => loginWithProvider(new firebase.auth.GoogleAuthProvider()));
+        githubLoginBtn.addEventListener('click', () => loginWithProvider(new firebase.auth.GithubAuthProvider()));
 
-                                const likeIdea = async () => {
-                                    if (!selectedIdea.value.liked && user.value) {
-                                        const ideaRef = doc(db, "ideas", selectedIdea.value.id);
-                                        await updateDoc(ideaRef, {
-                                            likes: selectedIdea.value.likes + 1
-                                        });
-                                        await setDoc(doc(db, "likes", `${selectedIdea.value.id}_${user.value.uid}`), {
-                                            userId: user.value.uid,
-                                            ideaId: selectedIdea.value.id
-                                        });
-                                        selectedIdea.value.liked = true;
-                                        selectedIdea.value.likes += 1;
-                                    }
-                                };
+        function loginWithProvider(provider) {
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    // Login successful, redirect to ideaboard.html
+                    window.location.href = 'ideaboard.html';
+                }).catch((error) => {
+                    console.error("Login failed:", error);
+                    alert("Login failed. Please try again.");
+                });
+        }
 
-                                const deleteIdea = async () => {
-                                    if (selectedIdea.value.authorId === user.value.uid) {
-                                        await deleteDoc(doc(db, "ideas", selectedIdea.value.id));
-                                        closePopup();
-                                    }
-                                };
-
-                                const startEditing = () => {
-                                    editingIdea.value = { ...selectedIdea.value };
-                                    isEditing.value = true;
-                                };
-
-                                const saveEdit = async () => {
-                                    if (editingIdea.value.title && editingIdea.value.content) {
-                                        const ideaRef = doc(db, "ideas", selectedIdea.value.id);
-                                        await updateDoc(ideaRef, {
-                                            title: editingIdea.value.title,
-                                            content: editingIdea.value.content
-                                        });
-                                        Object.assign(selectedIdea.value, editingIdea.value);
-                                        isEditing.value = false;
-                                    }
-                                };
-
-                                const cancelEdit = () => {
-                                    isEditing.value = false;
-                                };
-
-                                const formatDate = (date) => {
-                                    return new Date(date.seconds * 1000).toLocaleDateString();
-                                };
-
-                                const checkIfLiked = async (ideaId) => {
-                                    if (user.value) {
-                                        const likeRef = doc(db, "likes", `${ideaId}_${user.value.uid}`);
-                                        const likeDoc = await getDoc(likeRef);
-                                        selectedIdea.value.liked = likeDoc.exists();
-                                    }
-                                };
-
-                                const toggleTheme = () => {
-                                    isDarkMode.value = !isDarkMode.value;
-                                    updateTheme();
-                                };
-
-                                const updateTheme = () => {
-                                    if (isDarkMode.value) {
-                                        document.documentElement.classList.add('dark');
-                                    } else {
-                                        document.documentElement.classList.remove('dark');
-                                    }
-                                };
-
-                                const loginWithGoogle = async () => {
-                                    try {
-                                        await signInWithPopup(auth, googleProvider);
-                                        showLoginModal.value = false;
-                                    } catch (error) {
-                                        console.error("Google 로그인 실패:", error);
-                                        alert("Google 로그인에 실패했습니다. 다시 시도해주세요.");
-                                    }
-                                };
-
-                                const loginWithGithub = async () => {
-                                    try {
-                                        await signInWithPopup(auth, githubProvider);
-                                        showLoginModal.value = false;
-                                    } catch (error) {
-                                        console.error("GitHub 로그인 실패:", error);
-                                        alert("GitHub 로그인에 실패했습니다. 다시 시도해주세요.");
-                                    }
-                                };
-
-                                const logout = async () => {
-                                    try {
-                                        await signOut(auth);
-                                    } catch (error) {
-                                        console.error("로그아웃 실패:", error);
-                                    }
-                                };
-
-                                watch(isDarkMode, updateTheme);
-
-                                onMounted(() => {
-                                    onSnapshot(collection(db, "ideas"), (snapshot) => {
-                                        ideas.value = snapshot.docs.map(doc => ({
-                                            id: doc.id,
-                                            ...doc.data()
-                                        }));
-                                    });
-                                    updateTheme();
-
-                                    // 시스템 다크 모드 변경 감지
-                                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                                        isDarkMode.value = e.matches;
-                                    });
-
-                                    onAuthStateChanged(auth, (currentUser) => {
-                                        user.value = currentUser;
-                                    });
-                                });
-
-                                return {
-                                    ideas,
-                                    newIdea,
-                                    selectedIdea,
-                                    isDarkMode,
-                                    user,
-                                    showLoginModal,
-                                    isEditing,
-                                    editingIdea,
-                                    addIdea,
-                                    openPopup,
-                                    closePopup,
-                                    likeIdea,
-                                    deleteIdea,
-                                    startEditing,
-                                    saveEdit,
-                                    cancelEdit,
-                                    formatDate,
-                                    toggleTheme,
-                                    loginWithGoogle,
-                                    loginWithGithub,
-                                    logout
-                                };
-                            }
-                        }).mount('#app');
-                    </script>
-                </body>
-                </html>
+        // Check if user is already logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in, redirect to ideaboard.html
+                window.location.href = 'ideaboard.html';
+            }
+        });
+    </script>
+</body>
+</html>
